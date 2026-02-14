@@ -94,12 +94,10 @@ class PathautoUiTest extends WebDriverTestBase {
     $this->clickLink('Add Pathauto pattern');
 
     $session = $this->getSession();
-    $session->getPage()->fillField('type', 'canonical_entities:node');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->waitForField('pattern');
+    $session->getPage()->selectFieldOption('type', 'canonical_entities:node');
+    $this->assertSession()->assertExpectedAjaxRequest(1);
 
     $edit = [
-      'type' => 'canonical_entities:node',
       'bundles[page]' => TRUE,
       'label' => 'Page pattern',
       'pattern' => '[node:title]/[user:name]/[term:name]',
@@ -114,7 +112,7 @@ class PathautoUiTest extends WebDriverTestBase {
       $this->submitForm($edit, 'Save');
     }
 
-    $this->assertSession()->pageTextContains('Path pattern is using the following invalid tokens: [user:name], [term:name].');
+    $this->assertTrue($this->assertSession()->waitForText('Path pattern is using the following invalid tokens: [user:name], [term:name].'));
     $this->assertSession()->pageTextNotContains('The configuration options have been saved.');
 
     // We do not need ID anymore, it is already set in previous step and made
@@ -122,19 +120,19 @@ class PathautoUiTest extends WebDriverTestBase {
     unset($edit['id']);
     $edit['pattern'] = '#[node:title]';
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->pageTextContains('The Path pattern is using the following invalid characters: #.');
+    $this->assertTrue($this->assertSession()->waitForText('The Path pattern is using the following invalid characters: #.'));
     $this->assertSession()->pageTextNotContains('The configuration options have been saved.');
 
     // Checking whitespace ending of the string.
     $edit['pattern'] = '[node:title] ';
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->pageTextContains("The Path pattern doesn't allow the patterns ending with whitespace.");
+    $this->assertTrue($this->assertSession()->waitForText("The Path pattern doesn't allow the patterns ending with whitespace."));
     $this->assertSession()->pageTextNotContains('The configuration options have been saved.');
 
     // Fix the pattern, then check that it gets saved successfully.
     $edit['pattern'] = '[node:title]';
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->pageTextContains('Pattern Page pattern saved.');
+    $this->assertTrue($this->assertSession()->waitForText('Pattern Page pattern saved.'));
 
     \Drupal::service('pathauto.generator')->resetCaches();
 
@@ -143,13 +141,14 @@ class PathautoUiTest extends WebDriverTestBase {
     $alias = '/page-pattern-enabled';
     $node = $this->createNode(['title' => $title, 'type' => 'page']);
     $this->drupalGet($alias);
-    $this->assertSession()->pageTextContains($title);
+    $this->assertTrue($this->assertSession()->waitForText($title));
     $this->assertEntityAlias($node, $alias);
 
     // Edit workflow, set a new label and weight for the pattern.
     $this->drupalGet('/admin/config/search/path/patterns');
     $session->getPage()->pressButton('Show row weights');
     $this->submitForm(['entities[page_pattern][weight]' => '4'], 'Save');
+    $this->assertSession()->waitForText('Page pattern');
 
     $session->getPage()->find('css', '.dropbutton-toggle > button')->press();
     $this->clickLink('Edit');
@@ -164,7 +163,7 @@ class PathautoUiTest extends WebDriverTestBase {
     $edit = ['label' => 'Test'];
     $this->drupalGet('/admin/config/search/path/patterns/page_pattern');
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->pageTextContains('Pattern Test saved.');
+    $this->assertTrue($this->assertSession()->waitForText('Pattern Test saved.'));
     // Check that the pattern weight did not change.
     $this->assertSession()->optionExists('edit-entities-page-pattern-weight', '4');
 
@@ -172,7 +171,7 @@ class PathautoUiTest extends WebDriverTestBase {
     $session->getPage()->pressButton('Edit');
     $edit = ['label' => 'Test Duplicate', 'id' => 'page_pattern_test_duplicate'];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->pageTextContains('Pattern Test Duplicate saved.');
+    $this->assertTrue($this->assertSession()->waitForText('Pattern Test Duplicate saved.'));
 
     PathautoPattern::load('page_pattern_test_duplicate')->delete();
 
@@ -183,7 +182,7 @@ class PathautoUiTest extends WebDriverTestBase {
     $this->clickLink('Disable');
     $this->assertSession()->addressEquals('/admin/config/search/path/patterns/page_pattern/disable');
     $this->submitForm([], 'Disable');
-    $this->assertSession()->pageTextContains('Disabled pattern Test.');
+    $this->assertTrue($this->assertSession()->waitForText('Disabled pattern Test.'));
 
     // Load the pattern from storage and check if its disabled.
     $pattern = PathautoPattern::load('page_pattern');
@@ -203,7 +202,7 @@ class PathautoUiTest extends WebDriverTestBase {
     $address = Url::fromRoute('entity.pathauto_pattern.enable', ['pathauto_pattern' => 'page_pattern'], [$destination_query]);
     $this->assertSession()->addressEquals($address);
     $this->submitForm([], 'Enable');
-    $this->assertSession()->pageTextContains('Enabled pattern Test.');
+    $this->assertTrue($this->assertSession()->waitForText('Enabled pattern Test.'));
 
     // Reload pattern from storage and check if its enabled.
     $pattern = PathautoPattern::load('page_pattern');
@@ -213,7 +212,7 @@ class PathautoUiTest extends WebDriverTestBase {
     $this->drupalGet('/admin/config/search/path/patterns');
     $session->getPage()->find('css', '.dropbutton-toggle > button')->press();
     $this->clickLink('Delete');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->assertExpectedAjaxRequest(1);
     if (version_compare(\Drupal::VERSION, '10.1', '>=')) {
       $this->assertNotEmpty($this->assertSession()->waitForElementVisible('css', '#drupal-modal'));
       $this->assertSession()->elementContains('css', '#drupal-modal', 'This action cannot be undone.');
@@ -224,7 +223,7 @@ class PathautoUiTest extends WebDriverTestBase {
       $this->assertSession()->addressEquals($address);
       $this->submitForm([], 'Delete');
     }
-    $this->assertSession()->pageTextContains('The pathauto pattern Test has been deleted.');
+    $this->assertTrue($this->assertSession()->waitForText('The pathauto pattern Test has been deleted.'));
 
     $this->assertEmpty(PathautoPattern::load('page_pattern'));
   }

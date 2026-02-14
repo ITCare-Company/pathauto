@@ -119,22 +119,16 @@ class PathautoLocaleTest extends WebDriverTestBase {
     $admin_user = $this->drupalCreateUser($permissions);
     $this->drupalLogin($admin_user);
 
-    // Add French language.
-    $edit = [
-      'predefined_langcode' => 'fr',
-    ];
-    $this->drupalGet('admin/config/regional/language/add');
-    $this->submitForm($edit, 'Add language');
+    // Add predefined French language.
+    ConfigurableLanguage::createFromLangcode('fr')->save();
 
     $this->enableArticleTranslation();
 
     // Create a pattern for English articles.
     $this->addPathautoPattern('English articles', 'en', '/the-articles/[node:title]');
-    $this->assertSession()->pageTextContains('Pattern English articles saved.');
 
     // Create a pattern for French articles.
     $this->addPathautoPattern('French articles', 'fr', '/les-articles/[node:title]');
-    $this->assertSession()->pageTextContains('Pattern French articles saved.');
 
     // Create a node and its translation. Assert aliases.
     $edit = [
@@ -143,6 +137,7 @@ class PathautoLocaleTest extends WebDriverTestBase {
     ];
     $this->drupalGet('node/add/article');
     $this->submitForm($edit, 'Save');
+    $this->assertSession()->waitForText('English node has been created.');
     $node = $this->drupalGetNodeByTitle('English node');
     $this->assertAlias('/node/' . $node->id(), '/the-articles/english-node', 'en');
 
@@ -163,7 +158,7 @@ class PathautoLocaleTest extends WebDriverTestBase {
     ];
     $this->drupalGet('admin/config/search/path/update_bulk');
     $this->submitForm($edit, 'Update');
-    $this->assertSession()->waitForText('Generated 2 URL aliases.');
+    $this->assertTrue($this->assertSession()->waitForText('Generated 2 URL aliases.'));
     $this->assertAlias('/node/' . $node->id(), '/the-articles/english-node', 'en');
     $this->assertAlias('/node/' . $node->id(), '/les-articles/french-node', 'fr');
   }
@@ -209,18 +204,18 @@ class PathautoLocaleTest extends WebDriverTestBase {
     $this->drupalGet('admin/config/search/path/patterns/add');
     $page = $this->getSession()->getPage();
 
-    $page->fillField('type', 'canonical_entities:node');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->waitForField('pattern');
+    $page->selectFieldOption('type', 'canonical_entities:node');
+    $this->assertSession()->assertExpectedAjaxRequest(1);
 
-    $page->fillField('label', $label);
-    $this->assertSession()->waitForElementVisible('css', '#edit-label-machine-name-suffix .machine-name-value');
     $edit = [
+      'label' => $label,
+      'pattern' => $pattern,
       'bundles[article]' => TRUE,
       'languages[' . $langcode . ']' => TRUE,
-      'pattern' => $pattern,
     ];
     $this->submitForm($edit, 'Save');
+
+    $this->assertTrue($this->assertSession()->waitForText('Pattern ' . $label . ' saved.'));
   }
 
   /**
@@ -242,6 +237,7 @@ class PathautoLocaleTest extends WebDriverTestBase {
     $this->assertSession()->fieldExists('settings[node][article][settings][language][language_alterable]')->check();
 
     $this->getSession()->getPage()->pressButton('Save configuration');
+    $this->assertTrue($this->assertSession()->waitForText('Settings successfully updated.'));
   }
 
 }
