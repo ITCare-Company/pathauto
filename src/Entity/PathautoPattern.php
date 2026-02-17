@@ -215,6 +215,17 @@ class PathautoPattern extends ConfigEntityBase implements PathautoPatternInterfa
    */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
+
+    // Normalize the pattern: trim whitespace, remove tabs/carriage returns
+    // within the pattern, and ensure leading slash.
+    if ($this->pattern !== NULL) {
+      $this->pattern = trim($this->pattern);
+      $this->pattern = str_replace(["\t", "\r", "\n"], '', $this->pattern);
+      if ($this->pattern !== '' && $this->pattern[0] !== '/') {
+        $this->pattern = '/' . $this->pattern;
+      }
+    }
+
     $criteria = [];
     foreach ($this->getSelectionConditions() as $id => $condition) {
       $criteria[$id] = $condition->getConfiguration();

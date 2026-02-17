@@ -320,9 +320,6 @@ class PatternEditForm extends EntityForm {
         ]));
       }
 
-      if (preg_match('/(\s$)+/', $element['#value'])) {
-        $form_state->setError($element, t("The %element-title doesn't allow the patterns ending with whitespace.", ['%element-title' => $title]));
-      }
     }
 
     return $element;

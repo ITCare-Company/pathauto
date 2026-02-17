@@ -123,16 +123,16 @@ class PathautoUiTest extends WebDriverTestBase {
     $this->assertTrue($this->assertSession()->waitForText('The Path pattern is using the following invalid characters: #.'));
     $this->assertSession()->pageTextNotContains('The configuration options have been saved.');
 
-    // Checking whitespace ending of the string.
+    // Trailing whitespace is auto-corrected on save, so it should succeed.
     $edit['pattern'] = '[node:title] ';
     $this->submitForm($edit, 'Save');
-    $this->assertTrue($this->assertSession()->waitForText("The Path pattern doesn't allow the patterns ending with whitespace."));
-    $this->assertSession()->pageTextNotContains('The configuration options have been saved.');
-
-    // Fix the pattern, then check that it gets saved successfully.
-    $edit['pattern'] = '[node:title]';
-    $this->submitForm($edit, 'Save');
     $this->assertTrue($this->assertSession()->waitForText('Pattern Page pattern saved.'));
+
+    // Verify the pattern was trimmed and a leading slash was added.
+    $pattern = \Drupal::entityTypeManager()
+      ->getStorage('pathauto_pattern')
+      ->load('page_pattern');
+    $this->assertSame('/[node:title]', $pattern->getPattern());
 
     \Drupal::service('pathauto.generator')->resetCaches();
 
@@ -155,7 +155,7 @@ class PathautoUiTest extends WebDriverTestBase {
     $destination_query = ['query' => ['destination' => Url::fromRoute('entity.pathauto_pattern.collection')->toString()]];
     $address = Url::fromRoute('entity.pathauto_pattern.edit_form', ['pathauto_pattern' => 'page_pattern'], [$destination_query]);
     $this->assertSession()->addressEquals($address);
-    $this->assertSession()->fieldValueEquals('pattern', '[node:title]');
+    $this->assertSession()->fieldValueEquals('pattern', '/[node:title]');
     $this->assertSession()->fieldValueEquals('label', 'Page pattern');
     $this->assertSession()->checkboxChecked('edit-status');
     $this->assertSession()->linkExists('Delete');

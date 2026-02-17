@@ -508,7 +508,7 @@ class PathautoKernelTest extends KernelTestBase {
     $pattern = $this->createPattern('taxonomy_term', 'bundle', -1);
     $this->addBundleCondition($pattern, 'taxonomy_term', 'name');
     $pattern->save();
-    $this->assertEntityPattern('taxonomy_term', 'name', Language::LANGCODE_NOT_SPECIFIED, 'bundle');
+    $this->assertEntityPattern('taxonomy_term', 'name', Language::LANGCODE_NOT_SPECIFIED, '/bundle');
   }
 
   /**
