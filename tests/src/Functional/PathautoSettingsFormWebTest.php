@@ -142,12 +142,12 @@ class PathautoSettingsFormWebTest extends BrowserTestBase {
     $this->drupalGet('/node/add/article');
     $this->assertSession()->checkboxChecked('edit-path-0-pathauto');
     $this->submitForm(['title[0][value]' => $title], 'Save');
-    $this->assertSession()->pageTextContains('Created new alias /content/verbose-settings-test for');
+    $this->assertSession()->pageTextContains('Created new URL alias /content/verbose-settings-test for');
 
     $node = $this->drupalGetNodeByTitle($title);
     $this->drupalGet('/node/' . $node->id() . '/edit');
     $this->submitForm(['title[0][value]' => 'Updated title'], 'Save');
-    $this->assertSession()->pageTextContains('Created new alias /content/updated-title for');
+    $this->assertSession()->pageTextContains('Created new URL alias /content/updated-title for');
     $this->assertSession()->pageTextContains('replacing /content/verbose-settings-test.');
   }
 

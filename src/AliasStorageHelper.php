@@ -7,8 +7,10 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
 use Drupal\path_alias\AliasRepositoryInterface;
 
 /**
@@ -120,14 +122,17 @@ class AliasStorageHelper implements AliasStorageHelperInterface {
       return NULL;
     }
 
+    // Generate a link to the alias.
+    $alias_link = Link::fromTextAndUrl($alias, Url::fromUri('internal:' . $alias))->toString();
+
     // Update the existing alias if there is one and the configuration is set to
     // replace it.
     if ($existing_alias && $config->get('update_action') == PathautoGeneratorInterface::UPDATE_ACTION_DELETE) {
       $old_alias = $existing_alias->getAlias();
       $existing_alias->setAlias($alias)->save();
 
-      $this->messenger->addMessage($this->t('Created new alias %alias for %source, replacing %old_alias.', [
-        '%alias' => $alias,
+      $this->messenger->addMessage($this->t('Created new URL alias %alias for %source, replacing %old_alias.', [
+        '%alias' => $alias_link,
         '%source' => $source,
         '%old_alias' => $old_alias,
       ]));
@@ -143,8 +148,8 @@ class AliasStorageHelper implements AliasStorageHelperInterface {
       ]);
       $path_alias->save();
 
-      $this->messenger->addMessage($this->t('Created new alias %alias for %source.', [
-        '%alias' => $path_alias->getAlias(),
+      $this->messenger->addMessage($this->t('Created new URL alias %alias for %source.', [
+        '%alias' => $alias_link,
         '%source' => $path_alias->getPath(),
       ]));
 
