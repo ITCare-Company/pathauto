@@ -1,6 +1,13 @@
 (($, Drupal) => {
   Drupal.behaviors.pathFieldsetSummaries = {
     attach(context) {
+      // The drupalSetSummary method required for this behavior may not be
+      // available, so make sure this behavior is processed only if
+      // drupalSetSummary is defined.
+      if (typeof $.fn.drupalSetSummary === 'undefined') {
+        return;
+      }
+
       $(context)
         .find('.path-form')
         .drupalSetSummary((pathForm) => {
