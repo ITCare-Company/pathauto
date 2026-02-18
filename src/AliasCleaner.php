@@ -112,12 +112,12 @@ class AliasCleaner implements AliasCleanerInterface {
     $output = $alias;
 
     // Trim duplicate, leading, and trailing separators. Do this before cleaning
-    // backslashes since a pattern like "[token1]/[token2]-[token3]/[token4]"
-    // could end up like "value1/-/value2" and if backslashes were cleaned first
-    // this would result in a duplicate backslash.
+    // slashes since a pattern like "[token1]/[token2]-[token3]/[token4]"
+    // could end up like "value1/-/value2" and if slashes were cleaned first
+    // this would result in a duplicate slash.
     $output = $this->getCleanSeparators($output);
 
-    // Trim duplicate, leading, and trailing backslashes.
+    // Trim duplicate, leading, and trailing slashes.
     $output = $this->getCleanSeparators($output, '/');
 
     // Shorten to a logical place based on word boundaries.
