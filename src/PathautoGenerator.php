@@ -336,6 +336,9 @@ class PathautoGenerator implements PathautoGeneratorInterface {
               $pattern->setPattern($translated);
             }
           }
+          if ($entity->isNew()) {
+            return $pattern;
+          }
           $this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode] = $pattern;
           break;
         }
