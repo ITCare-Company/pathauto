@@ -204,11 +204,11 @@ class EntityAliasTypeBase extends PluginBase implements AliasTypeInterface, Alia
     $context['sandbox']['count'] += count($ids);
     $context['sandbox']['current'] = !empty($ids) ? max($ids) : 0;
     $context['results']['updates'] += $updates;
-    $context['message'] = $this->t('Updated alias for %label @id.', [
+    $context['message'] = $this->t('Processed @count of @total aliases for %label.', [
+      '@count' => $context['sandbox']['count'],
+      '@total' => $context['sandbox']['total'],
       '%label' => $entity_type->getLabel(),
-      '@id' => end($ids),
     ]);
-
     if ($context['sandbox']['count'] != $context['sandbox']['total']) {
       $context['finished'] = $context['sandbox']['count'] / $context['sandbox']['total'];
     }
